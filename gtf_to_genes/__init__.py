@@ -24,8 +24,8 @@
 #   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #   THE SOFTWARE.
 #################################################################################
-from gene import t_parse_gtf, t_gene, t_transcript
-from index_gtf_files import (
+from gtf_to_genes.gene import t_parse_gtf, t_gene, t_transcript
+from gtf_to_genes.index_gtf_files import (
             index_gtf_files,
             get_indexed_genes_for_identifier,
             get_indexed_genes_matching_gtf_file_name,
@@ -34,8 +34,8 @@ from index_gtf_files import (
             get_indexed_gene_types_matching_gtf_file_name,
             get_indexed_gene_types_matching_identifier,
             list_indexed_species)
-from gene_utilities import index_genes_by_gene_id, index_transcripts
-import gtf_to_genes_version
+from gtf_to_genes.gene_utilities import index_genes_by_gene_id, index_transcripts
+import gtf_to_genes.gtf_to_genes_version
 __version__=gtf_to_genes_version.__version
 
 

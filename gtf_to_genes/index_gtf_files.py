@@ -121,7 +121,7 @@
 
 import sys, os
 import re
-import gene
+import gtf_to_genes.gene
 
 # add self to search path for testing
 if __name__ == '__main__':
@@ -571,5 +571,5 @@ if __name__ == '__main__':
     #        print id, genes.keys()
     #        print "# of protein coding genes = ", len(genes['protein_coding'])
 
-    print "\n\nDone\n"
+    print( "\n\nDone\n")
 

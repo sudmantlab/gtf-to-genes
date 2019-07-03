@@ -32,10 +32,10 @@ FILE_VERSION_MIN = 1234
 
 import sys, os
 from collections import defaultdict
-import minimal_gtf_iterator
+import gtf_to_genes.minimal_gtf_iterator
 import time
-from dump_object import dump_object
-from itertools import izip
+from gtf_to_genes.dump_object import dump_object
+#from itertools import zip
 from array import array
 from collections import namedtuple
 import struct
@@ -44,7 +44,7 @@ import marshal
 do_dump = marshal.dump
 do_load = marshal.load
 
-from random_access_file_by_sections import fill_directory_of_sections, write_directory_of_sections, read_directory_of_sections
+from gtf_to_genes.random_access_file_by_sections import fill_directory_of_sections, write_directory_of_sections, read_directory_of_sections
 
 
 # how exonic data is stored
@@ -139,7 +139,7 @@ def overlapping_combined( orig_data, reverse = False):
         data = orig_data
 
     if not data[0][0] <= data[1][0]:
-        print orig_data, reverse
+        print(orig_data, reverse)
     assert(data[0][0] <= data[1][0])
 
     # start with the first interval
@@ -379,13 +379,13 @@ class t_gene(object):
     #   iterate through exons: provide ids as well
     #_____________________________________________________________________________________
     def get_coding_exons (self):
-        for exon, exon_id in izip(self.coding_exons, self.coding_exon_ids):
+        for exon, exon_id in zip(self.coding_exons, self.coding_exon_ids):
             yield exon, exon_id
     def get_utr_exons (self):
-        for exon, exon_id in izip(self.utr_exons, self.utr_exon_ids):
+        for exon, exon_id in zip(self.utr_exons, self.utr_exon_ids):
             yield exon, exon_id
     def get_exons (self):
-        for exon, exon_id in izip(self.exons, self.exon_ids):
+        for exon, exon_id in zip(self.exons, self.exon_ids):
             yield exon, exon_id
     def get_genome_locus (self):
         return "chr%s:%d-%d %s" % (self.contig, self.beg, self.end, "-+"[self.strand])
@@ -847,9 +847,9 @@ class t_parse_gtf(object):
             #   Turn gene_exons into dictionary of indices
             #       so we can store exons non-redundantly at the gene level
             #
-            gene_exon_intervals_ids        = dict(izip(sorted_gene_exon_intervals,         xrange(len(sorted_gene_exon_intervals))))
-            gene_coding_exon_intervals_ids = dict(izip(sorted_gene_coding_exon_intervals,  xrange(len(sorted_gene_coding_exon_intervals))))
-            gene_utr_exon_intervals_ids    = dict(izip(sorted_gene_utr_exon_intervals,     xrange(len(sorted_gene_utr_exon_intervals))))
+            gene_exon_intervals_ids        = dict(zip(sorted_gene_exon_intervals,         xrange(len(sorted_gene_exon_intervals))))
+            gene_coding_exon_intervals_ids = dict(zip(sorted_gene_coding_exon_intervals,  xrange(len(sorted_gene_coding_exon_intervals))))
+            gene_utr_exon_intervals_ids    = dict(zip(sorted_gene_utr_exon_intervals,     xrange(len(sorted_gene_utr_exon_intervals))))
 
             #print >>sys.stderr, gene_exon_intervals, gene_coding_exon_intervals
 
@@ -883,23 +883,23 @@ class t_parse_gtf(object):
                     coding_exon_indices = array('H', [gene_coding_exon_intervals_ids[e.genomic_interval] for e in coding_exons])
                 except:
                     for ce in coding_exons:
-                        print ce
+                        print( ce )
                     for k,v in gene_coding_exon_intervals_ids.items():
-                        print k, v
+                        print( k, v )
                     for all_cdna_id in self.gene_id_to_cdna_ids[unique_gene_id]:
                         for ce in sorted(self.cdna_id_to_coding_exons[all_cdna_id]):
-                            print all_cdna_id, ce
+                            print( all_cdna_id, ce)
                     raise
                 try:
                     utr_exon_indices = array('H', [gene_utr_exon_intervals_ids[e.genomic_interval] for e in utr_exons])
                 except:
                     for ce in utr_exons:
-                        print ce
+                        print( ce)
                     for k,v in gene_utr_exon_intervals_ids.items():
-                        print k, v
+                        print( k, v)
                     for all_cdna_id in self.gene_id_to_cdna_ids[unique_gene_id]:
                         for ce in sorted(self.cdna_id_to_utr_exons[all_cdna_id]):
-                            print all_cdna_id, ce
+                            print( all_cdna_id, ce)
                     raise
 
                 #
@@ -1593,7 +1593,7 @@ class t_parse_gtf(object):
                     self.cdna_id_to_stop_codons[cdna_id].add(t_raw_exon(exon_number, interval, "", 0))
         except:
             #print line_num, "    " + dump_object(gtf_entry)
-            print line_num, "    ", gtf_entry
+            print( line_num, "    ", gtf_entry)
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             sys.stderr.write(str(exceptionValue)  + "\n")
             raise
@@ -1806,11 +1806,11 @@ def run_function ():
 """
     if species == "test":
         if output_str != correct_output_str:
-            print "EXPECTING:\n", correct_output_str, "\n\n"
-            print "FOUND:\n", output_str, "\n\n"
+            print( "EXPECTING:\n", correct_output_str, "\n\n")
+            print( "FOUND:\n", output_str, "\n\n")
         assert (output_str == correct_output_str)
     else:
-        print output_str
+        print( output_str)
 
 
 class Test_gene(unittest.TestCase):

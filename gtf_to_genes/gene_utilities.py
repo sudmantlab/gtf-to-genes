@@ -28,7 +28,7 @@
 import sys, os
 from collections import defaultdict
 
-from gene import t_gene, t_transcript
+from gtf_to_genes.gene import t_gene, t_transcript
 
 
 #88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
