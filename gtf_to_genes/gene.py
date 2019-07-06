@@ -32,7 +32,7 @@ FILE_VERSION_MIN = 1234
 
 import sys, os
 from collections import defaultdict
-import gtf_to_genes.minimal_gtf_iterator
+import gtf_to_genes.minimal_gtf_iterator as minimal_gtf_iterator
 import time
 from gtf_to_genes.dump_object import dump_object
 #from itertools import zip
@@ -41,6 +41,7 @@ from collections import namedtuple
 import struct
 import gzip
 import marshal
+from six import string_types
 do_dump = marshal.dump
 do_load = marshal.load
 
@@ -65,12 +66,20 @@ class t_raw_exon(object):
         self.exon_id          = exon_id
         self.frame            = frame
     __slots__ = ['exon_number', 'genomic_interval', 'exon_id', 'frame']
-    def __cmp__(self, other):
-        return (
-                cmp(self.exon_number             , other.exon_number              ) or
-                cmp(self.genomic_interval        , other.genomic_interval         ) or
-                cmp(self.exon_id                 , other.exon_id                  ) or
-                cmp(self.frame                   , other.frame                    ))
+
+    def __lt__(self, other):
+        return (self.genomic_interval <  other.genomic_interval)
+        #return ((self.exon_number < other.exon_number) or 
+        #        (self.genomic_interval <  other.genomic_interval) or
+        #        (self.exon_id < other.exon_id) or
+        #        (self.frame < other.frame))
+
+    #def __cmp__(self, other):
+    #    return (
+    #            cmp(self.exon_number             , other.exon_number              ) or
+    #            cmp(self.genomic_interval        , other.genomic_interval         ) or
+    #            cmp(self.exon_id                 , other.exon_id                  ) or
+    #            cmp(self.frame                   , other.frame                    ))
     def __str__(self):
         return "%s (%d-%d) #%d, F=%s" % (self.exon_id,
                                          self.genomic_interval[0], self.genomic_interval[1],
@@ -108,7 +117,8 @@ def non_str_sequence (arg):
     We treat strings / dicts however as a singleton not as a sequence
 
     """
-    if (isinstance(arg, (basestring, dict))):
+    #if (isinstance(arg, (basestring, dict))):
+    if (isinstance(arg, (string_types, dict))):
         return False
     try:
         test = iter(arg)
@@ -140,6 +150,7 @@ def overlapping_combined( orig_data, reverse = False):
 
     if not data[0][0] <= data[1][0]:
         print(orig_data, reverse)
+
     assert(data[0][0] <= data[1][0])
 
     # start with the first interval
@@ -830,7 +841,6 @@ class t_parse_gtf(object):
             #for exon_number, pos, interval, frame, cdna_id in gene_coding_exons:
             #    print >>sys.stderr, cdna_id, exon_number, cdna_id_exon_number_to_exon_id.get((cdna_id, exon_number), "MISSING")
 
-
             new_gene = t_gene(gene_id, contig, strand, gene_type, gene_source,
                               gene_names,
                               sorted_gene_exon_intervals,
@@ -847,9 +857,9 @@ class t_parse_gtf(object):
             #   Turn gene_exons into dictionary of indices
             #       so we can store exons non-redundantly at the gene level
             #
-            gene_exon_intervals_ids        = dict(zip(sorted_gene_exon_intervals,         xrange(len(sorted_gene_exon_intervals))))
-            gene_coding_exon_intervals_ids = dict(zip(sorted_gene_coding_exon_intervals,  xrange(len(sorted_gene_coding_exon_intervals))))
-            gene_utr_exon_intervals_ids    = dict(zip(sorted_gene_utr_exon_intervals,     xrange(len(sorted_gene_utr_exon_intervals))))
+            gene_exon_intervals_ids        = dict(zip(sorted_gene_exon_intervals,         range(len(sorted_gene_exon_intervals))))
+            gene_coding_exon_intervals_ids = dict(zip(sorted_gene_coding_exon_intervals,  range(len(sorted_gene_coding_exon_intervals))))
+            gene_utr_exon_intervals_ids    = dict(zip(sorted_gene_utr_exon_intervals,     range(len(sorted_gene_utr_exon_intervals))))
 
             #print >>sys.stderr, gene_exon_intervals, gene_coding_exon_intervals
 
@@ -967,7 +977,7 @@ class t_parse_gtf(object):
         all_merged_coding_exon_counts_by_types = defaultdict(list)
 
         try:
-            for gene_type, genes in genes_by_type.iteritems():
+            for gene_type, genes in genes_by_type.items():
                 gene_counts_by_types[gene_type] =len(genes)
                 for g in genes:
                     gene_counts_by_transcript_types[gene_type][g.get_transcript_type_names()]+=1
@@ -1055,7 +1065,7 @@ class t_parse_gtf(object):
         do_dump(t_transcript.unique_transcript_type_names, data_file)
 
         # use placeholder of the correct size to hold file positions
-        file_pos_placeholder = long(data_file.tell())
+        file_pos_placeholder = int(data_file.tell())
 
 
         #
@@ -1375,7 +1385,7 @@ class t_parse_gtf(object):
         genes_by_type = self.construct_gene_list_from_parsed_data(logger)
         end_time = time.time()
 
-        cnt_all_genes = sum(len(g) for g in genes_by_type.itervalues())
+        cnt_all_genes = sum(len(g) for g in genes_by_type.values())
         logger.info("  Constructed %d genes in %ds" % (cnt_all_genes,  end_time - start_time))
         self.log_gene_types (logger, genes_by_type)
 
@@ -1491,6 +1501,10 @@ class t_parse_gtf(object):
         cnt_entries_with_no_gene_id = 0
         try:
             for line_num, gtf_entry in enumerate(minimal_gtf_iterator.iterator(gtf_file)):
+                #import pdb
+                #print(gtf_entry.mGeneId)
+                #pdb.set_trace()
+                ##WORKS - but... no gene id???
 
                 # ignore entries without gene_id
                 if not gtf_entry.mGeneId:
@@ -1504,7 +1518,6 @@ class t_parse_gtf(object):
                 mAttributes = gtf_entry.mAttributes
 
                 # common features
-
                 exon_number = int(mAttributes["exon_number"]) if "exon_number" in mAttributes else None
                 strand      = gtf_entry.mStrand in ['1', '+']
                 # Treat genes on X and Y with the same gene_id as separate
@@ -1600,8 +1613,8 @@ class t_parse_gtf(object):
 
         self.gene_types = list(self.gene_types)
         self.feature_set = list(self.feature_set)
-        logger.info("  Features = %s" % (", ".join(self.feature_set)))
-        logger.info("  Gene types = %s" % (", ".join(self.gene_types)))
+        logger.info("  Features = %s" % (", ".join(x for x in self.feature_set)))
+        logger.info("  Gene types = %s" % (", ".join(x for x in self.gene_types)))
         #assert(self.feature_set == ['start_codon', 'exon', 'stop_codon', 'CDS'])
 
 
@@ -1613,11 +1626,11 @@ class t_parse_gtf(object):
         """
         Count the number genes / transcripts with > 1 name
         """
-        for cdna_id, transcript_names in self.cdna_id_to_names.iteritems():
+        for cdna_id, transcript_names in self.cdna_id_to_names.items():
             if len(transcript_names) != 1:
                 logger.warning("Transcripts with > 1 name: %23s %s" % (cdna_id, str(transcript_names)))
 
-        for gene_id, gene_names in self.gene_id_to_names.iteritems():
+        for gene_id, gene_names in self.gene_id_to_names.items():
             if len(gene_names) != 1:
                 logger.warning("Genes with > 1 name: %23s %s" % (gene_id, str(gene_names)))
 
@@ -1634,7 +1647,7 @@ class t_parse_gtf(object):
             abstract out counting for start/stop codons
             """
             cnt_split_codons  = 0
-            for cdna_id, codons in cdna_id_to_codons.iteritems():
+            for cdna_id, codons in cdna_id_to_codons.items():
                 if len(codons) > 1:
                     cnt_split_codons += 1
                 if len(codons) > 2:

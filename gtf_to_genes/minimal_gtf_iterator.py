@@ -238,17 +238,19 @@ class gtf_entry:
         """parse attributes.
         """
         # remove comments
-        attributes = attributes.split( "#" )[0]
+        attributes = attributes.split("#" )[0]
         # separate into fields
         fields = map( lambda x: x.strip(), attributes.split(";")[:-1])
         self.mAttributes = {}
-
+        
         for f in fields:
 
             d = map( lambda x: x.strip(), f.split(" "))
-
-            n,v = d[0], d[1]
-            if len(d) > 2: v = d[1:]
+            map_vals = [x for x in d]
+            n,v = map_vals[0], map_vals[1] 
+            #n,v = d[0], d[1]
+            if len(map_vals) > 2: v = map_vals[1:]
+            #if len(d) > 2: v = d[1:]
 
             if v[0] == '"' and v[-1] == '"':
                 v = v[1:-1]
@@ -293,7 +295,7 @@ class gtf_entry:
 def iterator( infile ):
     """return a simple iterator over all entries in a file."""
     while 1:
-        line = infile.readline()
+        line = infile.readline().decode()
         if not line: raise StopIteration
         if line.startswith("#"): continue
         gtf = gtf_entry()

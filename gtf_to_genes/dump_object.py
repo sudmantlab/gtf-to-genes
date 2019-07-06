@@ -37,6 +37,7 @@ import sys, os
 from collections import defaultdict
 import array
 import textwrap
+from six import string_types
 
 #88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
 
@@ -89,7 +90,7 @@ def is_recursive (item, context):
             if is_recursive(v, context):
                 return True
 
-    elif isinstance(item, (basestring, int, float, long, complex)):
+    elif isinstance(item, (string_types, int, float, complex)):
         return False
 
     else:
@@ -129,13 +130,15 @@ def do_get_item_str (item, context, use_new_line, line_length, max_levels, sorte
     elif isinstance(item, array.array):
         #d_str, nested_levels = do_dump_list_or_tuple(list(item), context, __No, __LIST, line_length, max_levels)
         d_str = textwrap.fill(repr(item),  line_length)
-    elif isinstance(item, (basestring, int, float, long, complex)):
+    elif isinstance(item, (string_types, int, float, complex)):
         d_str = textwrap.fill(repr(item),  line_length)
     elif prevent_recursive_str_call and is_recursive (item, set()):
         #print >> sys.stderr, "prevent_recursive_str_call", item.__class__
         d_str, nested_levels = do_dump_object_or_dict(item, context, use_new_line, line_length, max_levels, sorted_attribute_names, ignored_attribute_names)
     else:
-        try:
+        try:    
+            import pdb
+            pdb.set_trace()
             r = getattr(type(item), "__str__", None)
             # if you have not redefined __str__, I will go down the rabbit hole
             if isinstance(item, object) and r is object.__str__:

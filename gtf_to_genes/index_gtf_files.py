@@ -121,7 +121,7 @@
 
 import sys, os
 import re
-import gtf_to_genes.gene
+import gtf_to_genes.gene as gene
 
 # add self to search path for testing
 if __name__ == '__main__':
